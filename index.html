@@ -1,0 +1,120 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Podium</title>
+<style>
+:root{--navy:#213A66;--ink:#1d2433}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0d1626;overflow:hidden;font-family:Calibri,"Segoe UI",Arial,sans-serif;color:var(--ink)}
+button,select,input{font-family:inherit}button{cursor:pointer;border:0;border-radius:10px}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;background:#fff;transform-origin:center center;overflow:hidden;box-shadow:0 0 40px #0008}
+.foot{position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(100deg,#9BCB3B 0 30%,#0B6E3D 30% 42%,#0072BC 42% 70%,#E31E32 70% 100%);opacity:.9}
+.title{position:absolute;left:24px;top:16px;width:880px;height:64px;background:var(--navy);color:#fff;border-radius:14px;font-size:32px;font-weight:700;display:flex;align-items:center;padding-left:22px}
+.logo{position:absolute;right:26px;top:18px;text-align:right;color:var(--navy);font-weight:700;font-size:17px;line-height:1.1}
+.logo small{display:block;font-weight:400;font-size:11px;color:#667}
+.body{position:absolute;left:24px;right:24px;top:92px;bottom:76px}
+.nav{position:absolute;left:0;right:0;bottom:8px;display:flex;justify-content:center;gap:10px;z-index:3}
+.nav button{background:var(--navy);color:#fff;padding:8px 18px;font-size:16px;font-weight:700}
+.nav button.on{background:#F4B400;color:var(--navy)}
+.bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bar label{font-weight:700;color:var(--navy);font-size:17px}
+.bar select,.bar input.t{padding:8px 10px;font-size:17px;border:1px solid #bbc;border-radius:8px}
+.sm{background:#dfe5f0;color:var(--navy);font-weight:700;padding:8px 14px;font-size:16px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{background:#dfe5f0;color:var(--navy);padding:8px 14px;font-size:19px;font-weight:700;text-align:center;flex:1}
+.tab.on{background:var(--navy);color:#fff}
+.tab small{display:block;font-weight:400;font-size:13px}
+.tab input{width:44px;text-align:center;font-size:13px;border:1px solid #aab;border-radius:5px;padding:1px}
+.grid{display:flex;flex-wrap:wrap;gap:14px;height:calc(100% - 66px);align-content:flex-start}
+.team{background:#fff;border-radius:16px;border-top:10px solid var(--c);padding:10px;text-align:center;box-shadow:0 2px 8px #0003;flex:0 0 calc((100% - 42px)/4);display:flex;flex-direction:column;justify-content:space-between}
+.team{height:340px}.team.many{height:calc((100% - 14px)/2)}
+.team .nm{font:700 24px Calibri,Arial;text-align:center;width:100%;border:0;border-bottom:2px dashed #ccc;color:var(--c);background:transparent}
+.mark{font-size:84px;font-weight:800;color:var(--c);line-height:1;cursor:text}
+.many .mark{font-size:52px}
+.mark.over{color:#C0392B}
+.lbl{font-size:14px;color:#666}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btns button{font-size:26px;font-weight:800;padding:10px;color:#fff}
+.many .btns button{font-size:20px;padding:6px}
+.up{background:#2E8B57}.down{background:#C0392B}
+.tot{font-size:17px}.tot b{font-size:28px;color:var(--c)}
+.seg{display:inline-flex;border-radius:10px;overflow:hidden;border:1px solid var(--navy)}
+.seg button{border-radius:0;background:#fff;color:var(--navy);padding:8px 14px;font-weight:700;font-size:16px}
+.seg button.on{background:var(--navy);color:#fff}
+.rows{display:flex;flex-direction:column;gap:10px;height:calc(100% - 52px)}
+.row{display:flex;align-items:center;gap:14px;padding:0 20px;border-radius:14px;color:#fff;font-size:34px;font-weight:700;background:var(--c);flex:1;min-height:0}
+.row .pos{width:100px}.row .nm{flex:1}.row .pts{font-size:48px}
+.row .bd{font-size:15px;font-weight:400;opacity:.92}
+.help{color:#556;font-size:17px;line-height:1.5}
+.help b{color:var(--navy)}
+.hb{background:#dfe5f0;color:var(--navy);font-weight:700;padding:9px 16px;font-size:16px}
+</style></head><body>
+<div id="stage"><div class="title" id="ttl"></div><div class="logo">Buckinghamshire<br>College Group<small>Aylesbury · Wycombe · Amersham</small></div><div class="body" id="body"></div><div class="foot"></div><div class="nav" id="nav"></div></div>
+<input type="file" id="file" accept=".json" hidden>
+<script>
+
+var COLS=["#E4572E","#2E86DE","#2E8B57","#8E44AD","#E0A100","#16A5A5","#D6336C","#5C6B7A"],MED=["🥇","🥈","🥉"];
+var PRESET=["FS 12 Fractions and percentages of amounts","FS 13 Percentage increase and decrease","FS 14 Discounts, VAT and simple interest","FS 15 Fraction, decimal and percentage equivalences","FS 16 Ratio","FS 17 Direct proportion and recipes"];
+var PIECES=[["Activity 1",3],["Activity 2",3],["Activity 3",3],["Deal or no deal",3],["Easy",8],["Medium",12],["Hard",16]];
+var KEY="scoreboard-v2",S,hist=[];
+function newClass(n){return{name:n,groups:["Group 1","Group 2","Group 3","Group 4"],topics:{},topic:PRESET[4],piece:0,mode:1}}
+function topicOf(c,t){if(!c.topics[t])c.topics[t]={max:PIECES.map(function(p){return p[1]}),m:{}};return c.topics[t]}
+function mk(c,t,g,p){var T=topicOf(c,t);return (T.m[g]&&T.m[g][p])||0}
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.classes){S={cur:"c1",classes:{c1:newClass("My class")}}}
+function C(){return S.classes[S.cur]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function snap(){hist.push(JSON.stringify(S));if(hist.length>100)hist.shift()}
+function gtot(c,g,topic){var t=0,ts=topic?[topic]:Object.keys(c.topics);ts.forEach(function(tt){PIECES.forEach(function(_,p){t+=mk(c,tt,g,p)})});return t}
+function setMark(g,v){var c=C(),T=topicOf(c,c.topic);if(!T.m[g])T.m[g]=PIECES.map(function(){return 0});T.m[g][c.piece]=Math.max(0,v)}
+
+var SL=[["setup","⚙ Setup"],["marks","✅ Add marks"],["lb","🏆 Leaderboard"]],cur=1,H={setup:0,marks:1,leaderboard:2,lb:2};
+function fit(){var k=Math.min(innerWidth/1280,innerHeight/720),st=document.getElementById("stage");st.style.transform="translate(-50%,-50%) scale("+k+")"}
+addEventListener("resize",fit);fit();
+function go(i){cur=Math.max(0,Math.min(2,i));try{history.replaceState(null,"","#"+SL[cur][0])}catch(e){}draw()}
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
+function nav(){var n=document.getElementById("nav");n.innerHTML="";var p=el("button","","◀");p.onclick=function(){go(cur-1)};n.appendChild(p);
+ SL.forEach(function(s,i){var b=el("button",i==cur?"on":"",s[1]);b.onclick=function(){go(i)};n.appendChild(b)});
+ var q=el("button","","▶");q.onclick=function(){go(cur+1)};n.appendChild(q);
+ var f=el("button","","⛶");f.title="Full screen (F)";f.onclick=fs;n.appendChild(f)}
+function fs(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()}
+addEventListener("keydown",function(e){if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;var k=e.key;
+ if(k=="ArrowRight"||k=="PageDown"||k==" ")go(cur+1);else if(k=="ArrowLeft"||k=="PageUp")go(cur-1);else if(k=="f"||k=="F")fs();else if(k=="Home")go(0);else if(k=="End")go(2);else if(k=="z"&&(e.ctrlKey||e.metaKey)){undo()}});
+function undo(){if(hist.length){S=JSON.parse(hist.pop());save();draw()}}
+function topicSelect(c){var ts=el("select");var all=PRESET.slice();Object.keys(c.topics).forEach(function(t){if(all.indexOf(t)<0)all.push(t)});
+ all.forEach(function(t){var o=el("option","",t);o.value=t;o.textContent=t;if(t==c.topic)o.selected=true;ts.appendChild(o)});ts.onchange=function(){c.topic=ts.value;save();draw()};return ts}
+function draw(){
+ var c=C(),B=document.getElementById("body");B.innerHTML="";document.getElementById("ttl").textContent="🏆 Podium · "+["Setup","Add marks","Leaderboard"][cur];nav();
+ if(cur==0){
+  var bar=el("div","bar");var l=el("label","","Class ");var cs=el("select");Object.keys(S.classes).forEach(function(k){var o=el("option","",S.classes[k].name);o.value=k;o.textContent=S.classes[k].name;if(k==S.cur)o.selected=true;cs.appendChild(o)});cs.onchange=function(){S.cur=cs.value;save();draw()};l.appendChild(cs);bar.appendChild(l);
+  var nc=el("button","sm","+ New class");nc.onclick=function(){var n=prompt("Name of the new class (e.g. FS L1 Tuesday)");if(n){snap();var id="c"+Date.now();S.classes[id]=newClass(n);S.cur=id;save();draw()}};bar.appendChild(nc);
+  var rc=el("button","sm","Rename class");rc.onclick=function(){var n=prompt("Class name",c.name);if(n){c.name=n;save();draw()}};bar.appendChild(rc);B.appendChild(bar);
+  bar=el("div","bar");l=el("label","","Topic ");l.appendChild(topicSelect(c));bar.appendChild(l);
+  var at=el("button","sm","+ Add topic");at.onclick=function(){var n=prompt("Topic name (e.g. GCSE 12 Ratio)");if(n){snap();topicOf(c,n);c.topic=n;save();draw()}};bar.appendChild(at);B.appendChild(bar);
+  bar=el("div","bar");bar.appendChild(el("label","","Groups"));var gm=el("button","sm","−");gm.onclick=function(){if(c.groups.length>2&&confirm("Remove the last group and its marks?")){snap();c.groups.pop();Object.keys(c.topics).forEach(function(t){delete c.topics[t].m[c.groups.length]});save();draw()}};
+  bar.appendChild(gm);bar.appendChild(el("b","",c.groups.length));var gp=el("button","sm","+");gp.onclick=function(){if(c.groups.length<8){snap();c.groups.push("Group "+(c.groups.length+1));save();draw()}};bar.appendChild(gp);
+  c.groups.forEach(function(g,i){var inp=el("input","t");inp.value=g;inp.style.borderLeft="8px solid "+COLS[i%8];inp.style.width="150px";inp.onchange=function(){c.groups[i]=inp.value;save();draw()};bar.appendChild(inp)});B.appendChild(bar);
+  bar=el("div","bar");var rs=el("button","hb","Reset this topic's marks");rs.onclick=function(){if(confirm("Set every mark for "+c.topic+" back to 0?")){snap();c.topics[c.topic]={max:topicOf(c,c.topic).max,m:{}};save();draw()}};bar.appendChild(rs);
+  var ex=el("button","hb","⬇ Backup");ex.onclick=function(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="scoreboard-backup.json";a.click()};bar.appendChild(ex);
+  var im=el("button","hb","⬆ Restore");im.onclick=function(){document.getElementById("file").click()};bar.appendChild(im);var un=el("button","hb","↩ Undo");un.onclick=undo;bar.appendChild(un);B.appendChild(bar);
+  B.appendChild(el("div","help","<b>How to use:</b> pick the class and topic, set the groups, then go to <b>Add marks</b> (→ key). Tap +1, +2, −1 or −2, or click the big number to type a mark. <b>Leaderboard</b> sorts itself. Use ← → or PageUp/PageDown to move between pages, <b>F</b> for full screen.<br>Marks save in this browser on this computer. <b>Backup</b> saves a file (e.g. to the N: drive); <b>Restore</b> loads it on another computer."));
+ }else if(cur==1){
+  var bar=el("div","bar");var l=el("label","","Topic ");l.appendChild(topicSelect(c));bar.appendChild(l);bar.appendChild(el("span","help",c.name));B.appendChild(bar);
+  var T=topicOf(c,c.topic),tb=el("div","tabs");
+  PIECES.forEach(function(p,k){var b=el("button","tab"+(k==c.piece?" on":""),p[0]+"<small>max <input type=number min=0 value="+T.max[k]+"></small>");b.onclick=function(){c.piece=k;save();draw()};var inp=b.querySelector("input");inp.onclick=function(e){e.stopPropagation()};inp.onchange=function(){T.max[k]=+inp.value||0;save();draw()};tb.appendChild(b)});B.appendChild(tb);
+  var gr=el("div","grid");c.groups.forEach(function(name,g){var d=el("div","team"+(c.groups.length>4?" many":""));d.style.setProperty("--c",COLS[g%8]);var v=mk(c,c.topic,g,c.piece);
+   d.innerHTML='<input class="nm" aria-label="Group name"><div class="lbl">'+PIECES[c.piece][0]+' (max '+T.max[c.piece]+')</div><div class="mark'+(v>T.max[c.piece]?" over":"")+'" title="Click to type a mark">'+v+'</div><div class="btns"><button class="up">+1</button><button class="up">+2</button><button class="down">−1</button><button class="down">−2</button></div><div class="tot">Topic total <b>'+gtot(c,g,c.topic)+'</b></div>';
+   var ni=d.querySelector(".nm");ni.value=name;ni.onchange=function(){c.groups[g]=ni.value;save();draw()};
+   var ds=[1,2,-1,-2];d.querySelectorAll("button").forEach(function(b,k){b.onclick=function(){snap();setMark(g,mk(c,c.topic,g,c.piece)+ds[k]);save();draw()}});
+   d.querySelector(".mark").onclick=function(){var x=prompt("Mark for "+c.groups[g]+" ("+PIECES[c.piece][0]+")",v);if(x!==null&&x!==""&&!isNaN(+x)){snap();setMark(g,Math.round(+x));save();draw()}};gr.appendChild(d)});B.appendChild(gr);
+ }else{
+  var bar=el("div","bar");var sg=el("span","seg");var m1=el("button",c.mode==1?"on":"","This topic"),m2=el("button",c.mode==2?"on":"","All topics");m1.onclick=function(){c.mode=1;save();draw()};m2.onclick=function(){c.mode=2;save();draw()};sg.appendChild(m1);sg.appendChild(m2);bar.appendChild(sg);
+  if(c.mode==1){var l=el("label","","Topic ");l.appendChild(topicSelect(c));bar.appendChild(l)}else bar.appendChild(el("span","help","All topics for "+c.name));B.appendChild(bar);
+  var tp=c.mode==1?c.topic:null,order=c.groups.map(function(_,g){return g}).sort(function(a,b){return gtot(c,b,tp)-gtot(c,a,tp)||a-b}),rows=el("div","rows");
+  order.forEach(function(g,r){var d=el("div","row");d.style.setProperty("--c",COLS[g%8]);
+   var bd=c.mode==1?PIECES.map(function(p,k){return p[0]+" "+mk(c,c.topic,g,k)}).join(" · "):Object.keys(c.topics).map(function(t){return t.split(" ").slice(0,2).join(" ")+" "+gtot(c,g,t)}).join(" · ");
+   d.innerHTML='<span class="pos">'+(MED[r]||(r+1)+"th")+'</span><span class="nm"></span><span class="pts">'+gtot(c,g,tp)+'</span>';
+   var n=d.querySelector(".nm");n.textContent=c.groups[g];if(c.groups.length<=6){var s=el("div","bd");s.textContent=bd;n.appendChild(s)}rows.appendChild(d)});B.appendChild(rows);
+ }}
+document.getElementById("file").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var x=JSON.parse(r.result);if(x.classes){snap();S=x;save();draw()}else alert("That is not a scoreboard backup.")}catch(er){alert("Could not read that file.")}};r.readAsText(f)};
+var h=(location.hash||"").slice(1);if(h in H)cur=H[h];
+addEventListener("hashchange",function(){var h=(location.hash||"").slice(1);if(h in H&&H[h]!=cur){cur=H[h];draw()}});
+draw();
+</script></body></html>
