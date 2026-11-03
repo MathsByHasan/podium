@@ -44,6 +44,16 @@ button,select,input{font-family:inherit}button{cursor:pointer;border:0;border-ra
 .row .bd{font-size:15px;font-weight:400;opacity:.92}
 .help{color:#556;font-size:17px;line-height:1.5}
 .help b{color:var(--navy)}
+.qs{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.qrow{display:flex;align-items:center;gap:4px}
+.ql{width:58px;text-align:left;font-weight:700;color:var(--navy);font-size:15px}.ql small{font-weight:400;color:#667}
+.qt{flex:1;min-width:0;padding:8px 0;background:#e6eaf3;color:var(--navy);font-weight:800;font-size:17px;border-radius:8px}
+.qt.on{background:var(--c);color:#fff}
+.team .lbl b{color:var(--c);font-size:20px}
+.team{height:auto;min-height:340px}
+.grid.scroll{overflow-y:auto;padding-bottom:70px}
+.team.many{height:auto;min-height:0}
+.many .qt{padding:5px 0;font-size:15px}.many .qs{gap:3px}.many .nm{font-size:20px}
 .hb{background:#dfe5f0;color:var(--navy);font-weight:700;padding:9px 16px;font-size:16px}
 </style></head><body>
 <div id="stage"><div class="title" id="ttl"></div><div class="logo">Buckinghamshire<br>College Group<small>Aylesbury · Wycombe · Amersham</small></div><div class="body" id="body"></div><div class="foot"></div><div class="nav" id="nav"></div></div>
@@ -53,17 +63,20 @@ button,select,input{font-family:inherit}button{cursor:pointer;border:0;border-ra
 var COLS=["#E4572E","#2E86DE","#2E8B57","#8E44AD","#E0A100","#16A5A5","#D6336C","#5C6B7A"],MED=["🥇","🥈","🥉"];
 var PRESET=["FS 12 Fractions and percentages of amounts","FS 13 Percentage increase and decrease","FS 14 Discounts, VAT and simple interest","FS 15 Fraction, decimal and percentage equivalences","FS 16 Ratio","FS 17 Direct proportion and recipes"];
 var PIECES=[["Activity 1",3],["Activity 2",3],["Activity 3",3],["Deal or no deal",3],["Easy",8],["Medium",12],["Hard",16]];
-var KEY="scoreboard-v2",S,hist=[];
+var KEY="scoreboard-v3",S,hist=[];
 function newClass(n){return{name:n,groups:["Group 1","Group 2","Group 3","Group 4"],topics:{},topic:PRESET[4],piece:0,mode:1}}
-function topicOf(c,t){if(!c.topics[t])c.topics[t]={max:PIECES.map(function(p){return p[1]}),m:{}};return c.topics[t]}
-function mk(c,t,g,p){var T=topicOf(c,t);return (T.m[g]&&T.m[g][p])||0}
+var DEFQ=[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,3,3],[4,4,4,4]];
+function sum(a){return a.reduce(function(x,y){return x+y},0)}
+function topicOf(c,t){if(!c.topics[t])c.topics[t]={q:DEFQ.map(function(a){return a.slice()}),m:{}};return c.topics[t]}
+function mk(c,t,g,p){var T=topicOf(c,t);return (T.m[g]&&T.m[g][p])?sum(T.m[g][p]):0}
+function qm(c,g,p,k){var T=topicOf(c,c.topic);return (T.m[g]&&T.m[g][p]&&T.m[g][p][k])||0}
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.classes){S={cur:"c1",classes:{c1:newClass("My class")}}}
 function C(){return S.classes[S.cur]}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function snap(){hist.push(JSON.stringify(S));if(hist.length>100)hist.shift()}
 function gtot(c,g,topic){var t=0,ts=topic?[topic]:Object.keys(c.topics);ts.forEach(function(tt){PIECES.forEach(function(_,p){t+=mk(c,tt,g,p)})});return t}
-function setMark(g,v){var c=C(),T=topicOf(c,c.topic);if(!T.m[g])T.m[g]=PIECES.map(function(){return 0});T.m[g][c.piece]=Math.max(0,v)}
+function setQ(g,k,v){var c=C(),T=topicOf(c,c.topic);if(!T.m[g])T.m[g]=PIECES.map(function(){return []});var a=T.m[g][c.piece];if(!a)a=T.m[g][c.piece]=[];while(a.length<T.q[c.piece].length)a.push(0);a[k]=v}
 
 var SL=[["setup","⚙ Setup"],["marks","✅ Add marks"],["lb","🏆 Leaderboard"]],cur=1,H={setup:0,marks:1,leaderboard:2,lb:2};
 function fit(){var k=Math.min(innerWidth/1280,innerHeight/720),st=document.getElementById("stage");st.style.transform="translate(-50%,-50%) scale("+k+")"}
@@ -91,19 +104,21 @@ function draw(){
   bar=el("div","bar");bar.appendChild(el("label","","Groups"));var gm=el("button","sm","−");gm.onclick=function(){if(c.groups.length>2&&confirm("Remove the last group and its marks?")){snap();c.groups.pop();Object.keys(c.topics).forEach(function(t){delete c.topics[t].m[c.groups.length]});save();draw()}};
   bar.appendChild(gm);bar.appendChild(el("b","",c.groups.length));var gp=el("button","sm","+");gp.onclick=function(){if(c.groups.length<8){snap();c.groups.push("Group "+(c.groups.length+1));save();draw()}};bar.appendChild(gp);
   c.groups.forEach(function(g,i){var inp=el("input","t");inp.value=g;inp.style.borderLeft="8px solid "+COLS[i%8];inp.style.width="150px";inp.onchange=function(){c.groups[i]=inp.value;save();draw()};bar.appendChild(inp)});B.appendChild(bar);
-  bar=el("div","bar");var rs=el("button","hb","Reset this topic's marks");rs.onclick=function(){if(confirm("Set every mark for "+c.topic+" back to 0?")){snap();c.topics[c.topic]={max:topicOf(c,c.topic).max,m:{}};save();draw()}};bar.appendChild(rs);
+  bar=el("div","bar");var rs=el("button","hb","Reset this topic's marks");rs.onclick=function(){if(confirm("Set every mark for "+c.topic+" back to 0?")){snap();c.topics[c.topic]={q:topicOf(c,c.topic).q,m:{}};save();draw()}};bar.appendChild(rs);
   var ex=el("button","hb","⬇ Backup");ex.onclick=function(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="scoreboard-backup.json";a.click()};bar.appendChild(ex);
   var im=el("button","hb","⬆ Restore");im.onclick=function(){document.getElementById("file").click()};bar.appendChild(im);var un=el("button","hb","↩ Undo");un.onclick=undo;bar.appendChild(un);B.appendChild(bar);
   B.appendChild(el("div","help","<b>How to use:</b> pick the class and topic, set the groups, then go to <b>Add marks</b> (→ key). Tap +1, +2, −1 or −2, or click the big number to type a mark. <b>Leaderboard</b> sorts itself. Use ← → or PageUp/PageDown to move between pages, <b>F</b> for full screen.<br>Marks save in this browser on this computer. <b>Backup</b> saves a file (e.g. to the N: drive); <b>Restore</b> loads it on another computer."));
  }else if(cur==1){
   var bar=el("div","bar");var l=el("label","","Topic ");l.appendChild(topicSelect(c));bar.appendChild(l);bar.appendChild(el("span","help",c.name));B.appendChild(bar);
-  var T=topicOf(c,c.topic),tb=el("div","tabs");
-  PIECES.forEach(function(p,k){var b=el("button","tab"+(k==c.piece?" on":""),p[0]+"<small>max <input type=number min=0 value="+T.max[k]+"></small>");b.onclick=function(){c.piece=k;save();draw()};var inp=b.querySelector("input");inp.onclick=function(e){e.stopPropagation()};inp.onchange=function(){T.max[k]=+inp.value||0;save();draw()};tb.appendChild(b)});B.appendChild(tb);
-  var gr=el("div","grid");c.groups.forEach(function(name,g){var d=el("div","team"+(c.groups.length>4?" many":""));d.style.setProperty("--c",COLS[g%8]);var v=mk(c,c.topic,g,c.piece);
-   d.innerHTML='<input class="nm" aria-label="Group name"><div class="lbl">'+PIECES[c.piece][0]+' (max '+T.max[c.piece]+')</div><div class="mark'+(v>T.max[c.piece]?" over":"")+'" title="Click to type a mark">'+v+'</div><div class="btns"><button class="up">+1</button><button class="up">+2</button><button class="down">−1</button><button class="down">−2</button></div><div class="tot">Topic total <b>'+gtot(c,g,c.topic)+'</b></div>';
+  var T=topicOf(c,c.topic),tb=el("div","tabs"),P=c.piece,Q=T.q[P];
+  var eq=el("button","sm","✏ Edit question marks");eq.onclick=function(){var x=prompt("Marks for each question in "+PIECES[P][0]+", separated by commas (e.g. 3,4,3,4)",Q.join(","));if(x===null)return;var a=x.split(",").map(function(n){return Math.round(+n)}).filter(function(n){return n>0&&n<=12});if(!a.length){alert("Please type numbers like 2,2,3,4");return}snap();T.q[P]=a;Object.keys(T.m).forEach(function(g){var r=T.m[g][P];if(r)T.m[g][P]=r.slice(0,a.length).map(function(v,i){return Math.min(v,a[i])})});save();draw()};bar.appendChild(eq);
+  PIECES.forEach(function(p,k){var b=el("button","tab"+(k==P?" on":""),p[0]+"<small>max "+sum(T.q[k])+"</small>");b.onclick=function(){c.piece=k;save();draw()};tb.appendChild(b)});B.appendChild(tb);
+  var gr=el("div","grid"+(c.groups.length>4?" scroll":""));c.groups.forEach(function(name,g){var d=el("div","team"+(c.groups.length>4?" many":""));d.style.setProperty("--c",COLS[g%8]);var v=mk(c,c.topic,g,P);
+   d.innerHTML='<input class="nm" aria-label="Group name"><div class="lbl">'+PIECES[P][0]+': <b>'+v+' / '+sum(Q)+'</b></div><div class="qs"></div><div class="tot">Topic total <b>'+gtot(c,g,c.topic)+'</b></div>';
    var ni=d.querySelector(".nm");ni.value=name;ni.onchange=function(){c.groups[g]=ni.value;save();draw()};
-   var ds=[1,2,-1,-2];d.querySelectorAll("button").forEach(function(b,k){b.onclick=function(){snap();setMark(g,mk(c,c.topic,g,c.piece)+ds[k]);save();draw()}});
-   d.querySelector(".mark").onclick=function(){var x=prompt("Mark for "+c.groups[g]+" ("+PIECES[c.piece][0]+")",v);if(x!==null&&x!==""&&!isNaN(+x)){snap();setMark(g,Math.round(+x));save();draw()}};gr.appendChild(d)});B.appendChild(gr);
+   var qs=d.querySelector(".qs");Q.forEach(function(mx,k){var row=el("div","qrow");row.appendChild(el("span","ql",(P<4?"Item ":"Q")+(k+1)+" <small>["+mx+"]</small>"));var cur1=qm(c,g,P,k);
+    for(var n=0;n<=mx;n++){(function(n){var t=el("button","qt"+(n==cur1?" on":""),String(n));t.onclick=function(){snap();setQ(g,k,n);save();draw()};row.appendChild(t)})(n)}qs.appendChild(row)});
+   gr.appendChild(d)});B.appendChild(gr);
  }else{
   var bar=el("div","bar");var sg=el("span","seg");var m1=el("button",c.mode==1?"on":"","This topic"),m2=el("button",c.mode==2?"on":"","All topics");m1.onclick=function(){c.mode=1;save();draw()};m2.onclick=function(){c.mode=2;save();draw()};sg.appendChild(m1);sg.appendChild(m2);bar.appendChild(sg);
   if(c.mode==1){var l=el("label","","Topic ");l.appendChild(topicSelect(c));bar.appendChild(l)}else bar.appendChild(el("span","help","All topics for "+c.name));B.appendChild(bar);
