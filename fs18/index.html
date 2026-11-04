@@ -15,6 +15,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:syste
 #stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;background:#fff;overflow:hidden;box-shadow:0 6px 30px #0008;user-select:none;font-family:Carlito,Calibri,"Segoe UI",sans-serif;color:#111}
 .sl{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;background-color:#fff;opacity:0;transition:opacity .35s;pointer-events:none}
 .sl.on{opacity:1;pointer-events:auto}
+.sl:not(.on) *{pointer-events:none!important}
 .e{position:absolute}
 .e img{width:100%;height:100%;display:block}
 .tx{position:absolute;inset:0;display:flex;flex-direction:column;overflow:visible}
