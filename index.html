@@ -67,7 +67,7 @@ var KEY="scoreboard-v3",S,hist=[];
 function newClass(n){return{name:n,groups:["Group 1","Group 2","Group 3","Group 4"],topics:{},topic:PRESET[4],piece:0,mode:1}}
 var DEFQ=[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,3,3],[4,4,4,4]];
 function sum(a){return a.reduce(function(x,y){return x+y},0)}
-var PRESETQ={"FS 17 Direct proportion and recipes":[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,4,4],[4,5,5,6]],"FS 18 Metric conversions":[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,4,4],[5,5,6,6]],"FS 19 Time":[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,4,4],[4,5,5,6]]};
+var PRESETQ={"FS 17 Direct proportion and recipes":[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,4,4],[4,5,5,6]],"FS 18 Metric conversions":[[1,1,1],[1,1,1],[1,1,1],[1,1,1],[2,2,2,2],[3,3,4,4],[5,5,6,6]],"FS 19 Time":[[1,1,1],[1,1,1],[1,1,1],[0],[2,2,2,2],[3,3,4,4],[5,5,6,6]]};
 function topicOf(c,t){if(!c.topics[t])c.topics[t]={q:(PRESETQ[t]||DEFQ).map(function(a){return a.slice()}),m:{}};return c.topics[t]}
 function mk(c,t,g,p){var T=topicOf(c,t);return (T.m[g]&&T.m[g][p])?sum(T.m[g][p]):0}
 function qm(c,g,p,k){var T=topicOf(c,c.topic);return (T.m[g]&&T.m[g][p]&&T.m[g][p][k])||0}
